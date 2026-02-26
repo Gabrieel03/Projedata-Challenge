@@ -1,80 +1,108 @@
-# controle-de-produtos
+# 🏭 Controle de Produtos (Product Control & Simulation)
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
+![Quarkus](https://img.shields.io/badge/Quarkus-Supersonic%20Subatomic-blue?style=for-the-badge&logo=quarkus)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/Render-Deploy-black?style=for-the-badge&logo=render)
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+O **Controle de Produtos** é uma API RESTful robusta desenvolvida em Java com o framework **Quarkus**. Este sistema gerencia o cadastro de produtos, as matérias-primas e a relação de necessidade entre eles. Além do CRUD básico, o grande diferencial deste projeto é a rota de **Simulação de Produção**, que realiza o cálculo do melhor cenário de fabricação possível com base no estoque atual de matérias-primas, priorizando produtos de maior valor para maximizar os lucros!
 
-## Running the application in dev mode
+---
 
-You can run your application in dev mode that enables live coding using:
+## 🚀 Tecnologias Utilizadas
 
-```shell script
-./mvnw quarkus:dev
-```
+A aplicação foi construída utilizando modernas práticas de desenvolvimento e arquitetura:
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+- **Java 21**: Linguagem de programação.
+- **Quarkus 3.x**: Framework Java (Supersonic Subatomic Java) voltado para cloud-native e alta performance.
+- **Hibernate ORM com Panache**: Para persistência e mapeamento objeto-relacional simplificado, utilizando o padrão Active Record / Repository.
+- **Jakarta REST (JAX-RS)**: Para criação das rotas da API REST.
+- **SmallRye OpenAPI & Swagger UI**: Documentação e interface da API interativa.
+- **MySQL**: Banco de dados relacional.
+- **Docker**: Containerização com Dockerfile multi-stage para facilitar a implementação e garantir isolamento.
+- **Maven**: Gerenciador de dependências e automação de build.
 
-## Packaging and running the application
+---
 
-The application can be packaged using:
+## 📊 Modelagem do Banco de Dados
 
-```shell script
-./mvnw package
-```
+O banco de dados foi projetado através de um modelo coeso e normalizado.
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+### Modelo Entidade-Relacionamento (MER)
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+- **Produto (Product)**: Representa o item final que será vendido ou fabricado. Possui informações como nome e preço.
+- **Matéria-Prima (RawMaterial)**: Representa os insumos necessários para a fabricação. Controla o nome do insumo e a quantidade atual em estoque.
+- **Relacionamento (ProductRawMaterial)**: Como um produto usa várias matérias-primas e uma matéria-prima faz parte de vários produtos, nós temos um relacionamento **Muitos-para-Muitos (N:M)**. Esta entidade associativa faz a ponte entre o Produto e a Matéria-Prima, especificando a **quantidade necessária (quantity_needed)** daquele insumo para fabricar *uma* unidade do produto.
 
-If you want to build an _über-jar_, execute the following command:
+### Diagrama Entidade-Relacionamento (DER)
 
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-```
+Abaixo, a representação das tabelas geradas no banco de dados e suas relações lógicas:
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+| Tabela | Colunas (Tipos) | Chaves e Regras |
+|--------|-----------------|-----------------|
+| `tb_products` | `id` (BIGINT)<br>`name` (VARCHAR(255))<br>`price` (DECIMAL(10,2)) | **PK:** `id` |
+| `tb_raw_materials` | `id` (BIGINT)<br>`name` (VARCHAR(255))<br>`stock_quantity` (INT) | **PK:** `id` |
+| `tb_product_raw_materials` | `id` (BIGINT)<br>`product_id` (BIGINT)<br>`raw_material_id` (BIGINT)<br>`quantity_needed` (INT) | **PK:** `id`<br>**FK:** `product_id` -> `tb_products(id)`<br>**FK:** `raw_material_id` -> `tb_raw_materials(id)` |
 
-## Creating a native executable
+---
 
-You can create a native executable using:
+## 🛠️ Como Executar o Projeto Localmente
 
-```shell script
-./mvnw package -Dnative
-```
+Siga as instruções para rodar o projeto na sua máquina de forma rápida.
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+### Pré-requisitos
+- **JDK 21+** instalado (ex: Eclipse Temurin).
+- **Maven** instalado (ou use o wrapper `./mvnw` incluso no diretório).
+- Instância do **MySQL** rodando localmente ou via container.
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+### Passo a Passo
 
-You can then execute your native executable with: `./target/controle-de-produtos-1.0.0-SNAPSHOT-runner`
+1. **Clone o repositório:**
+   ```bash
+   git clone <url-do-seu-repositorio>
+   cd controle-de-produtos
+   ```
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+2. **Configure o Banco de Dados:**
+   Crie um banco/schema no seu MySQL (por exemplo, `controle_produtos`).
+   Configure as seguintes variáveis de ambiente. Você pode exportá-las no seu terminal ou criar um arquivo `.env` na raiz do projeto (cujas variáveis o Quarkus tentará carregar):
+   ```env
+   DB_USER=seu_usuario
+   DB_PASS=sua_senha
+   DB_URL=jdbc:mysql://localhost:3306/controle_produtos?useSSL=false
+   ```
 
-## Related Guides
+3. **Inicie a Aplicação em Modo Dev (Quarkus):**
+   No terminal, execute:
+   ```bash
+   ./mvnw compile quarkus:dev
+   ```
+   > O Quarkus iniciará a aplicação na porta `8080` utilizando **Live Reload** e gerando as tabelas automaticamente (`update`).
 
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- Hibernate Validator ([guide](https://quarkus.io/guides/validation)): Validate object properties (field, getter) and method parameters for your beans (REST, CDI, Jakarta Persistence)
-- SmallRye OpenAPI ([guide](https://quarkus.io/guides/openapi-swaggerui)): Document your REST APIs with OpenAPI - comes with Swagger UI
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- JDBC Driver - MySQL ([guide](https://quarkus.io/guides/datasource)): Connect to the MySQL database via JDBC
+4. **Acesse a API e as ferramentas:**
+   - **Swagger UI** (para testar as rotas): [http://localhost:8080/q/swagger-ui/](http://localhost:8080/q/swagger-ui/)
+   - **Quarkus Dev UI** (dashboard dev): [http://localhost:8080/q/dev/](http://localhost:8080/q/dev/)
 
-## Provided Code
+---
 
-### Hibernate ORM
+## ☁️ Deploy na Nuvem (Render)
 
-Create your first JPA entity
+Esta aplicação foi empacotada em uma imagem Docker para produção e hospedada na plataforma **Render**, garantindo disponibilidade e praticidade.
 
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
+### Entendendo a Arquitetura de Deploy
+- A aplicação utiliza o arquivo `Dockerfile` na raiz do projeto para realizar um **build multistage**.
+- **Stage 1**: Levanta um container com o Maven embutido para fazer o _clean package_ (eliminando a necessidade do ambiente destino ter Maven/Java de build instalados).
+- **Stage 2**: Pega o app jar otimizado da pasta `target` e coloca numa imagem enxuta baseada em `openjdk-21`, habilitando as flags de hosts e logs nativas do Quarkus.
 
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
+### Variáveis de Ambiente em Produção
+Para que tudo funcione perfeitamente no Render (ou em outras plataformas PaaS), as seguintes _Environment Variables_ foram inseridas no painel de administração da plataforma (elas correspondem ao bloco `%prod` do `application.properties`):
+- `DATABASE_URL`: A connection string JDBC apontando pro Host do Banco de Dados hospedado.
+- `DATABASE_USER`: Usuário de produção.
+- `DATABASE_PASS`: Senha do BD de produção.
 
+Ao inicializar o serviço Web, a aplicação conecta ao banco recém provisionado e automaticamente reconstrói ou atualiza o _schema_ graças a propriedade `hibernate-orm.database.generation=update`.
 
-### REST
+---
 
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+*Projeto desenvolvido para otimização do controle e fabricação de produtos industriais e comerciais.*
